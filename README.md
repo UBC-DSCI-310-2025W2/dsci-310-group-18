@@ -8,6 +8,11 @@ Authors: Jerry Jin, Malcolm Maxwell, Sadie Lee
 
 ## Usage
 
+This project uses `conda-lock` for Docker. Install using: 
+```bash
+conda-lock install --name YOURENV conda-lock.yml
+```
+
 ## Dependencies
 
 ## License
