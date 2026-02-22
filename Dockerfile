@@ -5,9 +5,9 @@ FROM quay.io/jupyter/minimal-notebook:2024-02-24
 COPY conda-lock.yml /tmp/conda-lock.yml
 
 # 3. Install dependencies into a NEW environment named dsci310proj
-RUN mamba install -y conda-lock && \
+RUN conda install -y conda-lock && \
     conda-lock install --name dsci310proj /tmp/conda-lock.yml && \
-    mamba clean -afy
+    conda clean -afy
 
 # 4. Register the new environment as a Jupyter kernel
 RUN /opt/conda/envs/dsci310proj/bin/python -m ipykernel install --user --name python3 --display-name "Python (dsci310proj)"
