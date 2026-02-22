@@ -14,3 +14,5 @@ RUN /opt/conda/envs/dsci310proj/bin/python -m ipykernel install --user --name py
 
 # 5. Set the new environment as the default path
 ENV PATH=/opt/conda/envs/dsci310proj/bin:$PATH
+
+#test auto build
