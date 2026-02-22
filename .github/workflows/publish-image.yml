@@ -2,7 +2,7 @@ name: Publish Dockerfile on DockerHub
 on: 
   push: 
     branches:
-      - adding-analyst
+      - adding-analysis
     paths: 
       - 'Dockerfile'
 jobs:
