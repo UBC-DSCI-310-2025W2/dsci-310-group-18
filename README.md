@@ -21,7 +21,7 @@ This project's computation environment is containerized using Docker. To run the
    docker build -t dsci-310-group-18 .
 
 2. **Run Docker**
-    docker run --rm -p 8888:8888 -v "$(pwd):/home/jovyan/work" dsci-310-group-18 jupyter lab   
+    docker run --rm -p 8888:8888 -v "$(pwd):/home/jovyan/work" zheqijin/dsci-310-group-18:latest jupyter lab   
 Open the URL provided in the terminal (starting with http://127.0.0.1:8888/lab) in your browser to access the notebooks.
 
 3.  **Running Locally (Without Docker)**
