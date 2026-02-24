@@ -2,7 +2,7 @@ name: Publish Dockerfile on DockerHub
 on: 
   push: 
     branches:
-      - main
+      - adding-analysis
     paths: 
       - 'Dockerfile'
 jobs:
@@ -19,7 +19,7 @@ jobs:
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         WITH_V: true
-        RELEASE_BRANCHES: main
+        RELEASE_BRANCHES: adding-analysis
         DEFAULT_BUMP: patch
       id: bump
     - name: Create Release
@@ -41,4 +41,5 @@ jobs:
         name: zheqijin/dsci-310-group-18 # change this to your DockerHub username and repository
         username: ${{ secrets.DOCKER_USERNAME }} # you need to add your Docker username to this GitHub repo as a secret
         password: ${{ secrets.DOCKER_PASSWORD }} # you need to add your Docker password to this GitHub repo as a secret
+        platforms: linux/amd64,linux/arm64
         tags: "latest,${{ steps.bump.outputs.new_tag }}"
