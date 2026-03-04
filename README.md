@@ -12,11 +12,31 @@ The data we used to build our model contains all near-earth asteroids and their 
 The analysis report can be found in `notebooks/asteroid_analysis.ipynb`. 
 
 ## Usage
+### Run with Docker Compose (Recommended)
+The simplest way to run the project. Requires Docker Desktop to be installed and running.
+1. Clone the repository:
+```bash
+git clone https://github.com/UBC-DSCI-310-2025W2/dsci-310-group-18.git
+cd dsci-310-group-18
+```
+2. Start the container:
+```bash
+docker compose up
+```
+3. Open the URL printed in the terminal (starting with http://127.0.0.1:8888/...) in your browser.
+4. Navigate to work/notebooks/asteroid_analysis.ipynb and run all cells via Kernel → Restart Kernel and Run All Cells.
+5. When finished, stop the container with Ctrl+C, then:
+```bash
+docker compose down
+```
+
+### Running with Docker locally
+
 This project uses `conda-lock` for Docker. Install using: 
 ```bash
 conda-lock install --name YOURENV conda-lock.yml
 ```
-### Running with Docker (Recommended)
+
 This project's computation environment is containerized using Docker. We use a Docker container image to make the computational environment for this project reproducible. To run the analysis and develop collaboratively:
 
 1. **Build the Docker image:**
