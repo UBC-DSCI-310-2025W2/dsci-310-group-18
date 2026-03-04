@@ -1,5 +1,4 @@
 # Predicting Potentially Hazardous Near-Earth Asteroids
-
 Authors: Jerry Jin, Malcolm Maxwell, Sadie Lee
 
 ## About
@@ -28,7 +27,7 @@ This project's computation environment is containerized using Docker. We use a D
 
 2. **Run Docker**
     ```bash
-    docker run --rm -p 8888:8888 -v "$(pwd):/home/jovyan/work" dsci-310-group-18 jupyter lab
+    docker run --rm -p 8888:8888 -v "$(pwd):/home/jovyan/work" dsci-310-group-18 jupyter lab   
     ```
 Open the URL provided in the terminal (starting with http://127.0.0.1:8888/lab) in your browser to access the notebooks.
 
@@ -41,7 +40,7 @@ If you prefer not to use Docker, you can install the environment locally using c
     jupyter lab 
     ```
 ## Dependencies
-Python version 3.12. Jupyter and Python packages are listed in `environment.yml`.
+Python version 3.12. Jupyter and Python packages can be found in `environment.yml`. 
 
 ## License
 
