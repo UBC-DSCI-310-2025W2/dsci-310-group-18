@@ -12,5 +12,4 @@ RUN conda install -y conda-lock && \
 # 4. Register the new environment to overwrite the default kernel
 RUN /opt/conda/envs/dsci310proj/bin/python -m ipykernel install --user --name python3 --display-name "Python (dsci310proj)"
 
-
 ENV PATH=/opt/conda/envs/dsci310proj/bin:$PATH
