@@ -2,7 +2,7 @@ name: Publish Dockerfile on DockerHub
 on:
   push:
     branches:
-      - main
+      - fix-release
     paths:
       - 'Dockerfile'
 
@@ -27,15 +27,6 @@ jobs:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
 
-      - name: Bump version and push tag
-        uses: anothrNick/github-tag-action@1.67.0
-        id: bump
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          WITH_V: true
-          RELEASE_BRANCHES: main
-          DEFAULT_BUMP: patch
-
       - name: Build and push multi-platform image
         uses: docker/build-push-action@v5
         with:
@@ -44,4 +35,4 @@ jobs:
           platforms: linux/amd64,linux/arm64
           tags: |
             zheqijin/dsci-310-group-18:latest
-            zheqijin/dsci-310-group-18:${{ steps.bump.outputs.new_tag }}
+            
