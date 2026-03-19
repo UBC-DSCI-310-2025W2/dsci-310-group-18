@@ -1,0 +1,791 @@
+---
+title: "Predicting Potentially Hazardous Near-Earth Asteroids"
+author: "Jerry Jin, Malcolm Maxwell, Sadie Lee"
+format:
+  html:
+    toc: true
+    toc-depth: 3
+    toc-title: "Table of Contents"
+    number-sections: true
+    embed-resources: true
+execute:
+  echo: false
+  warning: false
+  message: false
+bibliography: references.bib
+jupyter: python3
+---
+
+## Summary
+
+The main goal of this project is to build a predictive model that classifies near-earth objects as potentially hazardous, specifically aiming to see if additional orbital and physical characteristics are associated with such prediction. This is important because it allows planetary defense to detect potential risks before intervention is too late. Methodologically, we perform K-Nearest Neighbors using 4 orbital and physical variables from NASA JPL's Small-Body DataBase as predictors and focusing on the target binary variable `pha` (potentially hazardous asteroid) for classification. Additionally, we tune the model using cross-validation and evaluate its performance through ROC-AUC, Precision-Recall curves, confusion matrices, and threshold tuning. Finally, it's worth noting that NASA's Small-Body DataBase contains a significant class imbalance between non- and potentially hazardous asteroids, leading us to ultimately prioritize recall and reduce false negatives.
+
+## Introduction
+
+**Background**
+Astronomers monitor and identify asteroids as a means to classify those that may pose a threat to Earth and humanity. Specifically, near-earth asteroids (NEAs), those whose orbits bring them relatively close to Earth, are a primary focus of this monitoring. While most are harmless, some of these asteroids are referred to as potentially hazardous (PHAs), as certain characteristics (such as an asteroid's minimum orbit intersection distance with Earth and its size) determine an asteroid's potential risk of impact. This classification of PHAs is valuable for both planetary science and defense, since even small asteroids can cause serious harm if they entered into our atmosphere.
+
+**Question**
+Can orbital and physical characteristics of near-Earth asteroids be used to accurately predict whether an asteroid is classified as potentially hazardous?
+
+**Dataset**
+This project uses the Small-Body DataBase (SBDB) from NASA JPL [@nasa_sbdb]. Specifically, we use only near-earth asteroids rather than all objects for speed and efficiency. Variables were chosen based on available data, i.e., if a significant percentage of a variable was missing for the defined scope (near-earth asteroids), the variable was not included in the API call. The dataset retrieved from the API contains the following variables in @tbl-variables.
+
+```{python}
+#| label: tbl-variables
+#| tbl-cap: "Variables retrieved from the NASA JPL SBDB Query API."
+#| echo: false
+
+import pandas as pd
+
+pd.DataFrame({
+    "Variable": ["spkid", "full_name", "pdes", "orbit_id", "pha", "moid_ld", "epoch", "e", "a", "q", "i", "ma", "tp", "H"],
+    "Type": ["int64", "str", "str", "str", "int64", "float64", "float64", "float64", "float64", "float64", "float64", "float64", "float64", "float64"],
+    "Description": [
+        "Object primary ID",
+        "Object full name/designation",
+        "Object primary designation",
+        "Orbit solution ID",
+        "Potentially hazardous asteroid flag (target), 1 indicates PHA, 0 indicates not PHA",
+        "Earth minimum orbit intersection distance, renamed to `min_orbit_intersection_dist`",
+        "Epoch of osculation in Julian day form",
+        "Eccentricity, renamed to `eccentricity`",
+        "Semi-major axis, renamed to `semi_major_axis`",
+        "Perihelion distance, renamed to `perihelion_dist`",
+        "Inclination (angle w.r.t. the x-y ecliptic plane), renamed to `inclination`",
+        "Mean anomaly in degrees, renamed to `mean_anomaly`",
+        "Time of perihelion passage, renamed to `time_of_perihelion_passsage`",
+        "Absolute magnitude parameter, renamed to `abs_magnitude`"
+    ]
+})
+```
+
+## Methods & results
+
+### Imports and setup
+
+We import the `requests` library to pull data from NASA's API, `pandas` and `numpy` for data wrangling, `matplotlib` and `seaborn` for visualization, and `scikit-learn` for training our KNN model. We also set a fixed random seed to ensure all work is reproducible.
+
+```{python}
+#| echo: false
+
+import requests
+import pandas as pd
+import numpy as np
+import math
+from pathlib import Path
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+from sklearn.preprocessing import RobustScaler
+from sklearn.pipeline import Pipeline
+from sklearn.model_selection import train_test_split, RandomizedSearchCV
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.metrics import classification_report, roc_auc_score, confusion_matrix, ConfusionMatrixDisplay, precision_recall_curve, average_precision_score
+from scipy.stats import randint
+```
+
+```{python}
+#| echo: false
+
+# Set seed
+np.random.seed(1)
+```
+
+### Fetch data
+
+In order to conduct our analysis, we must first retrieve data on near-earth asteroids directly from NASA JPL's SBDB Query API. Ensuring that only near-earth objects are included, we state that `sb-group="neo"` and request variables such as eccentricity, inclination, and absolute magnitude. Finally, we convert the JSON output into a DataFrame, saving it to `data/raw/asteroid_data_raw.csv` and preserving the original dataset for further analysis.
+
+```{python}
+#| output: false
+
+# Base API URL
+base_url = "https://ssd-api.jpl.nasa.gov/sbdb_query.api"
+raw_data_path = Path("data/raw/asteroid_data_raw.csv")
+
+# Define fields
+fields = [
+    "spkid", "full_name", "pdes", "orbit_id",
+    "pha", "moid_ld", "epoch",
+    "e", "a", "q", "i", "ma", "tp", "H",
+]
+
+params = {
+    "sb-kind": "a",
+    "sb-group": "neo", # near earth objects only
+    "fields": ",".join(fields)
+}
+
+# Reuse local raw data if it already exists so Quarto rendering doesn't depend
+# on a live API request every time.
+if raw_data_path.exists():
+    df = pd.read_csv(raw_data_path)
+else:
+    response = requests.get(base_url, params=params, timeout=60)
+    response.raise_for_status()
+    data = response.json()
+    records = data.get("data", [])
+    df = pd.DataFrame(records, columns=fields)
+    df.to_csv(raw_data_path, index=False)
+
+n_records = len(df)
+```
+
+Notably, the resulting dataset contains `{python} n_records` records.
+
+### Clean data
+
+To clean our raw data in preparation for classification, we first recode the abbreviated API variable names into more descriptive column names, not only enhancing readability but also allowing for a more transparent workflow. We then recode the target variable `pha` by removing rows containing missing values and converting the remaining values to binary for simplicity. Additionally, we standardize asteroid names by removing parentheses and replacing spaces with underscores to ensure consistency. Now, checking for missing values across all other variables, we drop the few rows that contain missing values for absolute magnitude (being that this is the only column actually containing NA-values) and save the cleaned dataset to `data/processed/asteroid_data_clean.csv`.
+
+```{python}
+#| output: false
+
+# Read data
+df = pd.read_csv('data/raw/asteroid_data_raw.csv')
+```
+
+```{python}
+#| output: false
+
+# Rename columns to more descriptive
+
+df = df.rename(columns={
+    'moid_ld': 'min_orbit_intersection_dist',
+    'e': 'eccentricity',
+    'a': 'semi_major_axis',
+    'q': 'perihelion_dist',
+    'i': 'inclination',
+    'ma': 'mean_anomaly',
+    'tp': 'time_of_perihelion_passage',
+    'H': 'abs_magnitude'
+})
+```
+
+```{python}
+#| output: false
+
+# Drop rows where PHA is NA
+# PHA is target variable
+
+df.dropna(subset=['pha'], inplace=True)
+```
+
+```{python}
+#| output: false
+
+# Convert PHA values to boolean
+
+pha_map = {'Y': 1, 'N': 0}
+df['pha'] = df['pha'].map(pha_map)
+```
+
+```{python}
+#| output: false
+
+# Clean and standardize full name
+# Remove parentheses
+# Replace spaces with underscores
+# Clean edge underscores if any
+
+df['full_name'] = df['full_name'].str.replace(r"[()]", "", regex=True).str.replace(r"\s+", "_", regex=True).str.strip("_")
+```
+
+```{python}
+#| output: false
+
+# Missing data summary
+
+missing_summary = df.isnull().sum()
+missing_abs_magnitude = int(df['abs_magnitude'].isna().sum())
+rows_before_drop = len(df)
+```
+
+Not significant missing data remained after collection. We therefore dropped the rows missing `abs_magnitude`, which affected only `{python} missing_abs_magnitude` out of `{python} rows_before_drop` observations.
+
+```{python}
+#| output: false
+
+df.dropna(subset=['abs_magnitude'], inplace=True)
+```
+
+```{python}
+#| output: false
+
+# Save cleaned data to data/processed
+
+df.to_csv('data/processed/asteroid_data_clean.csv', index=False)
+```
+
+### Exploratory data analysis
+
+#### Dataset Overview
+
+```{python}
+#| output: false
+
+# Read clean data
+
+asteroids = pd.read_csv('data/processed/asteroid_data_clean.csv')
+n_asteroids, n_variables = asteroids.shape
+pha_counts = asteroids['pha'].value_counts().sort_index()
+```
+
+Having loaded our cleaned dataset, we note that our analysis will be working with `{python} n_asteroids` near-earth objects, each containing `{python} n_variables` descriptive variables.
+
+Here, the summary statistics provide a general sense of the typical ranges and variability for each column. This aids our understanding of potential skewness and may be important when identifying transformations later.
+
+Notably, our target variable `pha` shows a distinct class imbalance, containing far more non-hazardous near-earth asteroids than potentially hazardous ones (`{python} int(pha_counts[0])` compared to `{python} int(pha_counts[1])`). While this pattern is expected, it will be important when evaluating our model performance later.
+
+#### Univariate Distributions
+
+To better understand each distinct variable's role in the dataset, we plot their individual histograms and analyze their spread, shape, and skew. However, since several of these variables span large ranges, we apply log transforms where necessary.
+
+```{python}
+#| echo: false
+
+def make_histogram(df, fields, scales=None, cols=3):
+    """
+    Create grid of histograms for quantitative variables
+    """
+    if scales is None:
+        scales = {}
+
+    n = len(fields)
+    rows = math.ceil(n / cols)
+
+    fig, axes = plt.subplots(rows, cols, figsize=(5*cols, 4*rows))
+    axes = axes.flatten()
+
+    for i, field in enumerate(fields):
+        data = df[field].dropna()
+        scale = scales.get(field, 'linear')
+
+        if scale == 'log':
+            axes[i].hist(data, bins=30, log=True)
+            axes[i].set_yscale('log')
+            axes[i].set_title(f"{field} - log")
+        else:
+            axes[i].hist(data, bins=30)
+            axes[i].set_title(field)
+
+        axes[i].set_ylabel("Frequency")
+
+    # Remove empty subplots
+    for j in range(i + 1, len(axes)):
+        fig.delaxes(axes[j])
+
+    plt.suptitle('Variable Histograms', fontsize=16)
+    plt.show()
+```
+
+```{python}
+#| label: fig-histogram
+#| fig-cap: "Variable Histograms. Log scale applied to heavily skewed variables."
+#| fig-width: 8
+#| fig-height: 7
+#| echo: false
+
+# Numerical variables to use
+# Excluding spkid
+
+fields = [
+    'min_orbit_intersection_dist',
+    'epoch',
+    'eccentricity',
+    'semi_major_axis',
+    'perihelion_dist',
+    'inclination',
+    'mean_anomaly',
+    'time_of_perihelion_passage',
+    'abs_magnitude'
+]
+
+scales = {
+    'min_orbit_intersection_dist': 'log',
+    'epoch': 'log',
+    'semi_major_axis': 'log',
+    'inclination': 'log',
+    'time_of_perihelion_passage': 'log'
+}
+
+hist_grid = make_histogram(asteroids, fields=fields, scales=scales, cols=3)
+```
+
+Here, @fig-histogram shows that various predictors are asymmetrically distributed with the majority of observations being higher in value (`epoch`, `perihelion_dist`, and `time_of_perihelion_passage`), while variables like `inclination` and `min_orbit_intersection_dist` show frequencies decreasing as values increase. Conversely, `eccentricity` somewhat resembles that of a bell-curved distribution, indicating a balanced central tendency. Finally, `mean_anomaly` appears somewhat bimodal, showing higher frequencies near both ends of its range, while `semi_major_axis` contains most of its values near zero with very few outliers extending outward.
+
+#### Multivariate
+
+Now, wanting to better understand the individual relationships between our numerical predictors, we plot a correlation heat map (@fig-heatmap), allowing us to explore patterns and potential dependencies.
+
+```{python}
+#| label: fig-heatmap
+#| fig-cap: "Variable Correlation Heatmap."
+#| fig-width: 7
+#| fig-height: 5
+#| echo: false
+
+# Select numeric columns, drop ID and PHA (target)
+data = asteroids.select_dtypes(include='number').drop(columns=['spkid', 'pha'])
+
+# Compute correlation
+corr = data.corr()
+
+plt.figure(figsize=(7, 5))
+
+sns.heatmap(
+    corr,
+    annot=True,
+    fmt='.2f',
+    cmap='coolwarm',
+    vmin=-1,
+    vmax=1,
+    linewidths=0.5,
+    cbar_kws={'label': 'Correlation'}
+)
+
+plt.xticks(rotation=45, ha='right')
+plt.yticks(rotation=0)
+plt.tight_layout()
+plt.show()
+```
+
+We see a significant correlation (`{python} round(corr.loc['epoch', 'time_of_perihelion_passage'], 2)`) between `epoch` and `time_of_perihelion_passage`. Consider that `epoch` indicates the epoch of osculation in Julian day form. Then, this correlation makes sense and is expected given that perihelion time ($T_p$) is related to epoch by:
+
+$$
+T_p \approx \text{epoch} - \text{fraction of orbital period}
+$$
+
+Perihelion passage is within one orbital period of the epoch which creates a near-linear relationship, and is thus reflected in a highly linear correlation. In other words, these two variables are not independent measurements but rather computed relative to the other, i.e., a spurious correlation.
+
+When modeling, we will not use both variables as features.
+
+#### Outliers
+
+Outliers may not necessarily indicate statistical noise in this dataset, but could rather indicate rare phenomena. We thus examine outliers via both statistical methods and visual methods.
+
+```{python}
+#| output: false
+
+# IQR
+
+numeric_cols = asteroids.select_dtypes(include='number').drop(columns=['spkid'])
+
+Q1 = numeric_cols.quantile(0.25)
+Q3 = numeric_cols.quantile(0.75)
+IQR = Q3 - Q1
+
+lower = Q1 - 1.5 * IQR
+upper = Q3 + 1.5 * IQR
+
+iqr_outliers = (numeric_cols < lower) | (numeric_cols > upper)
+iqr_counts = iqr_outliers.sum()
+```
+
+There are quite a lot of outliers flagged by IQR. However, this is expected given that IQR assumes a roughly symmetric distribution. In the histograms plotted earlier, we observed long tails, multiple peaks, and skewed distributions.
+
+We use Empirical Cumulative Distribution Function (ECDF) plots to visualize the distribution with every data point, and no binning or smoothing [@seaborn_ecdf].
+
+```{python}
+#| label: fig-ecdf
+#| fig-cap: "Variable ECDF Plots."
+#| fig-width: 8
+#| fig-height: 7
+#| echo: false
+
+# ECDF plots
+
+numeric_cols = asteroids.select_dtypes(include='number').drop(columns=['spkid', 'pha'])
+
+# Grid layout
+grid_cols = 3
+n = len(numeric_cols.columns)
+rows = (n + grid_cols - 1) // grid_cols
+
+fig, axes = plt.subplots(rows, grid_cols, figsize=(5*grid_cols, 4*rows))
+axes = axes.flatten()
+
+for i, col in enumerate(numeric_cols.columns):
+    sns.ecdfplot(
+        data=asteroids,
+        x=col,
+        ax=axes[i]
+    )
+    axes[i].set_xlabel(col)
+    axes[i].set_ylabel("ECDF")
+
+plt.suptitle('Variable ECDF Plots')
+plt.tight_layout()
+plt.show()
+```
+
+Outliers are expected given the particular domain and variables. Particuarly, since `epoch` values are reference times, rather than physical variables, this is expected. This stands for `time_of_perihelion_passage` as well. For `semi_major_axis`, this also makes sense given the different orbital populations that are present, e.g., near-earth and main belt. Additionally, the outliers in `min_orbit_intersection_dist` could indicate meaning rather than noise such that low MOID signifies hazardous objects, making this variable likely a strong feature to use when modeling.
+
+#### Initial Feature Selection
+
+We use robust scaling and kernel density estimation (KDE) plots to investigate structure for potential feature variables compared to the target variable (PHA).
+
+```{python}
+#| output: false
+
+drop_cols = [
+    'spkid', # ID
+    'full_name',
+    'pdes',
+    'orbit_id',
+    'epoch', # non-physical variables
+    'time_of_perihelion_passage'
+]
+
+log_cols = [
+    'semi_major_axis',
+    'perihelion_dist',
+    'min_orbit_intersection_dist',
+    'abs_magnitude'
+]
+
+df = asteroids.copy()
+
+# Log transform
+for col in log_cols:
+    df[f'log_{col}'] = np.log1p(df[col])
+
+# Drop raw
+df = df.drop(columns=log_cols)
+
+# Features
+X = df.drop(columns=drop_cols + ['pha'])
+
+# Scale
+scaler = RobustScaler()
+X_scaled = scaler.fit_transform(X)
+
+scaled_df = pd.DataFrame(X_scaled, columns=X.columns)
+scaled_df['pha'] = df['pha'].values
+```
+
+```{python}
+#| label: fig-kde
+#| fig-cap: "Predictor Distribution by PHA Status."
+#| fig-width: 9
+#| fig-height: 8
+#| echo: false
+
+predictors = scaled_df.select_dtypes(include='number').drop(columns=['pha'])
+predictor_cols = predictors.columns.tolist()
+
+cols = 3
+n = len(predictor_cols)
+rows = math.ceil(n / cols)
+
+fig, axes = plt.subplots(rows, cols, figsize=(6*cols, 5*rows))
+axes = axes.flatten()
+
+for i, col in enumerate(predictor_cols):
+    sns.kdeplot(
+        data=scaled_df,
+        x=col,
+        hue='pha',
+        fill=True,
+        common_norm=False,
+        ax=axes[i]
+    )
+    axes[i].set_title(f"{col} distribution by PHA")
+
+# Remove any extra empty subplots
+for j in range(i + 1, len(axes)):
+    fig.delaxes(axes[j])
+
+# Add title
+fig.suptitle("Predictor Distribution by PHA Status", fontsize=16)
+plt.tight_layout()
+plt.show()
+```
+
+From these KDE plots (@fig-kde), we can see that the absolute magnitude and MOID features may be strong features for prediction, given that both demonstrate significant peaks for PHA=1 compared to PHA=0. To a lesser extent, eccentricity demonstrates this as well. Conversely, inclination and perihelion distance have higher peaks for PHA=0 compared to PHA=1. Mean anomaly may be another feature to use, given that PHA=0 shows a strong multimodal distribution compared to PHA=1. Semi-major axis may be a feature to drop given the significant overlap between classes.
+
+Additionally, given that an asteroid is typically classified deterministically as potentially hazardous via MOID and absolute magnitude, we do not use these features. In other words, we examine if there are other possible features that are associated with PHA classification.
+
+### Data Preprocessing
+
+Split into train (60%), validation (20%), and test sets (20%).
+
+```{python}
+#| output: false
+
+# Split into train/val/test
+
+# Features and target
+# Dropping semi major axis, MOID, absolute magnitude as selected and explained above
+X = scaled_df.drop(columns=['pha', 'log_semi_major_axis', 'log_min_orbit_intersection_dist', 'log_abs_magnitude'])
+y = scaled_df['pha']
+
+# Split 1: train and val vs test
+X_temp, X_test, y_temp, y_test = train_test_split(
+    X, y,
+    test_size=0.2,
+    stratify=y, # stratify given target class imbalance
+    random_state=42
+)
+
+# Split 2: train vs val
+X_train, X_val, y_train, y_val = train_test_split(
+    X_temp, y_temp,
+    test_size=0.25,
+    stratify=y_temp,
+    random_state=42
+)
+train_n = X_train.shape[0]
+val_n = X_val.shape[0]
+test_n = X_test.shape[0]
+selected_feature_count = X.shape[1]
+```
+
+This preprocessing yields `{python} train_n` training observations, `{python} val_n` validation observations, and `{python} test_n` test observations across `{python} selected_feature_count` modeled features.
+
+### Binary Classification
+
+To predict whether a near-earth object is a potentially hazardous asteroid (PHA), we use binary classification. Given the constraint of using methods presented in DSCI 100, we use a KNN classifier with `sklearn` [@sklearn_knn], the only classification method discussed in the course.
+
+We use a pipeline to robust scale the data and model with the KNN classifier, and use random search 5-fold cross validation to tune parameters.
+
+```{python}
+#| echo: false
+
+# Create pipeline
+
+knn_pipeline = Pipeline([
+    ("scaler", RobustScaler()),
+    ("knn", KNeighborsClassifier())
+])
+```
+
+```{python}
+#| output: false
+
+# Perform random search to tune parameters
+
+# Define parameters
+param_dist = {
+    "knn__n_neighbors": randint(3, 50),
+    "knn__weights": ["uniform", "distance"],
+    "knn__metric": ["euclidean", "manhattan", "minkowski"],
+    "knn__p": [1, 2]
+}
+
+random_search = RandomizedSearchCV(
+    knn_pipeline,
+    param_distributions=param_dist,
+    n_iter=50,
+    cv=5,
+    scoring="roc_auc",
+    n_jobs=-1,
+    random_state=42,
+    verbose=0
+)
+
+random_search.fit(X_train, y_train)
+```
+
+```{python}
+#| output: false
+
+best_model = random_search.best_estimator_
+best_params = random_search.best_params_
+best_cv_auc = random_search.best_score_
+```
+
+These parameters are expected given this dataset. The selected distance metric was `{python} best_params['knn__metric']`, with `p = {python} best_params['knn__p']`, which is consistent with a setting where predictors may vary in scale and shape across dimensions.
+
+The tuned neighborhood size was `k = {python} best_params['knn__n_neighbors']`, which smooths the decision boundary and reduces sensitivity to local noise. The best cross-validated ROC-AUC during tuning was `{python} round(best_cv_auc, 3)`.
+
+We note that the CV AUC is significantly worse when dropping MOID and absolute magnitude, which clearly makes sense given that these two features are typically used to flag/label asteroids as potentially hazardous, i.e., they are direct attributes such that predicting PHA using these attributes is in effect redundant.
+
+### Results and Visualization
+
+#### Validation Evaluation
+
+```{python}
+#| output: false
+
+y_val_pred = best_model.predict(X_val)
+y_val_proba = best_model.predict_proba(X_val)[:, 1]
+
+val_auc = roc_auc_score(y_val, y_val_proba)
+val_report = classification_report(y_val, y_val_pred, output_dict=True)
+```
+
+We can see that with the default classification threshold, precision is `{python} round(val_report['1']['precision'], 2)` and recall is `{python} round(val_report['1']['recall'], 2)` for asteroids considered potentially hazardous. This makes sense, given that 1) there is significant class imbalance, and 2) we dropped MOID and absolute magnitude which are used to label PHAs. Since PHA=1 is a rare event, we will tune the threshold to maximize recall before evaluating on the test set.
+
+```{python}
+#| label: fig-val-confmat
+#| fig-cap: "Validation Confusion Matrix."
+#| fig-width: 4
+#| fig-height: 3.5
+#| echo: false
+
+# Confusion matrix
+
+cm_val = confusion_matrix(y_val, y_val_pred)
+plot_cm_val = ConfusionMatrixDisplay(cm_val, display_labels=["Non-PHA", "PHA"])
+plot_cm_val.plot(cmap="Blues")
+plt.tight_layout()
+plt.show()
+```
+
+Examining the confusion matrix on the validation set (@fig-val-confmat), we see `{python} int(cm_val[0, 1])` false positives, `{python} int(cm_val[1, 1])` true positives, and `{python} int(cm_val[1, 0])` false negatives. This pattern strengthens the argument that we must adjust the decision threshold and prioritize recall so as not to miss hazardous asteroids.
+
+```{python}
+#| label: fig-val-pr
+#| fig-cap: "Precision-Recall Curve (Val)."
+#| fig-width: 5
+#| fig-height: 5
+#| echo: false
+
+# PR curve
+precision, recall, thresholds = precision_recall_curve(y_val, y_val_proba)
+avg_prec = average_precision_score(y_val, y_val_proba)
+
+plt.figure(figsize=(6, 6))
+plt.plot(recall, precision, label=f"AP = {avg_prec:.3f}")
+plt.xlabel("Recall")
+plt.ylabel("Precision")
+plt.legend()
+plt.tight_layout()
+plt.show()
+```
+
+The precision-recall curve (@fig-val-pr) clearly reflects that the model tends to perform generally poorly with an average precision score of `{python} round(avg_prec, 3)`, suggesting that the model does not do well when distinguishing between hazardous and non-hazardous asteroids.
+
+#### Threshold Tuning
+
+```{python}
+#| output: false
+
+min_precision = 0.85
+valid = precision[:-1] >= min_precision
+
+if valid.any():
+    best_idx = np.argmax(recall[:-1][valid])
+    best_thresh = thresholds[valid][best_idx]
+    threshold_rule = f"maximum recall subject to precision >= {min_precision}"
+else:
+    best_idx = np.argmax(recall[:-1])
+    best_thresh = thresholds[best_idx]
+    threshold_rule = "maximum recall because no threshold satisfied the minimum precision target"
+```
+
+Using the rule `{python} threshold_rule`, the selected decision threshold was approximately `{python} round(best_thresh, 3)`. This threshold is intended to classify more asteroids as hazardous and improve recall, while still reflecting the practical limits of model performance on this validation set.
+
+#### Test Evaluation
+
+```{python}
+#| output: false
+
+y_test_pred = best_model.predict(X_test)
+y_test_proba = best_model.predict_proba(X_test)[:, 1]
+y_test_thresh = (y_test_proba >= best_thresh).astype(int)
+
+test_auc = roc_auc_score(y_test, y_test_proba)
+test_report = classification_report(y_test, y_test_thresh, output_dict=True)
+```
+
+Now we see better precision on the test set after using the tuned threshold. However, recall and F1-score remain poor for PHA=1 samples, with precision `{python} round(test_report['1']['precision'], 2)`, recall `{python} round(test_report['1']['recall'], 2)`, and F1-score `{python} round(test_report['1']['f1-score'], 2)`. Again, this makes sense given that we dropped MOID and absolute magnitude. This also shows that other features are associated with PHA classification to some extent, albeit marginally.
+
+```{python}
+#| label: fig-test-confmat
+#| fig-cap: "Test Confusion Matrix."
+#| fig-width: 4
+#| fig-height: 3.5
+#| echo: false
+
+# Confusion matrix using tuned threshold
+
+cm_test = confusion_matrix(y_test, y_test_thresh)
+plot_cm_test = ConfusionMatrixDisplay(cm_test, display_labels=["Non-PHA", "PHA"])
+plot_cm_test.plot(cmap="Blues")
+plt.tight_layout()
+plt.show()
+```
+
+Having tuned the threshold, the updated confusion matrix (@fig-test-confmat) on the test set shows only slight improvement, with `{python} int(cm_test[1, 1])` true positive and `{python} int(cm_test[1, 0])` false negatives. Although the gain is modest, it does indicate some improvement in the model's ability to identify potentially hazardous asteroids with these features.
+
+```{python}
+#| label: fig-test-pr
+#| fig-cap: "Precision-Recall Curve (Test)."
+#| fig-width: 5
+#| fig-height: 5
+#| echo: false
+
+# PR curve
+precision, recall, thresholds = precision_recall_curve(y_test, y_test_proba)
+avg_prec_test = average_precision_score(y_test, y_test_proba)
+
+plt.figure(figsize=(6, 6))
+plt.plot(recall, precision, label=f"AP = {avg_prec_test:.3f}")
+plt.xlabel("Recall")
+plt.ylabel("Precision")
+plt.legend()
+plt.tight_layout()
+plt.show()
+```
+
+Interestingly, the test PR curve (@fig-test-pr) has an average precision of `{python} round(avg_prec_test, 3)`, compared with `{python} round(avg_prec, 3)` on the validation set. Even after threshold tuning, test-set recall for PHA remains low at `{python} round(test_report['1']['recall'], 2)`, so the model still struggles to separate hazardous from non-hazardous asteroids reliably on unseen data.
+
+Next, we examine the Recall@K curve. This will illustrate how many PHAs are detected when considering the top $k$ highest-risk asteroids.
+
+```{python}
+#| label: fig-recall-at-k
+#| fig-cap: "Recall@K Curve."
+#| fig-width: 5
+#| fig-height: 4
+#| echo: false
+
+# Recall@K curve 
+
+sorted_idx = np.argsort(-y_test_proba)
+sorted_y = y_test.values[sorted_idx]
+
+k_vals = np.arange(1, len(sorted_y)+1)
+recall_at_k = np.cumsum(sorted_y) / sorted_y.sum()
+
+plt.plot(k_vals, recall_at_k)
+plt.xlabel("Top K asteroids")
+plt.ylabel("Recall@K")
+plt.tight_layout()
+plt.show()
+```
+
+The relatively smooth curve (@fig-recall-at-k) indicates that the model is not very good at prioritizing risky objects first.
+
+Finally, we examine at the probability distributions for each class (non-PHA vs PHA) to better understand how well the model separates the two.
+
+```{python}
+#| label: fig-prob-dist
+#| fig-cap: "Predicted Probability Distributions by Class."
+#| fig-width: 7
+#| fig-height: 4
+#| echo: false
+
+# Probability distributions by class
+
+plt.figure(figsize=(12, 5))
+sns.kdeplot(y_test_proba[y_test==0], label='Non-PHA', fill=True)
+sns.kdeplot(y_test_proba[y_test==1], label='PHA', fill=True)
+plt.xlabel("Predicted Probability")
+plt.legend()
+plt.tight_layout()
+plt.show()
+```
+
+We can see fairly clear separation between classes (@fig-prob-dist). Examining the decision boundary, we see the same result.
+
+## Discussion
+
+Given additional orbital and physical characteristics, we aimed to predict whether these features were associated with whether near-earth asteroids should be considered potentially hazardous, training a KNN classifier with `pha` as the target variable and tuning it using 5-fold cross validation. The resulting model performed relatively poorly overall, with an achieved test-set ROC-AUC of `{python} round(test_auc, 3)` and a test-set recall of `{python} round(test_report['1']['recall'], 2)` for hazardous asteroids. In other words, given the class imbalance such that PHAs are a rare event, as well as the use of features that exclude MOID and absolute magnitude, the model had difficulty accurately classifying PHAs. This could also reflect the relatively small feature set, since we modeled only `{python} selected_feature_count` features. Such misclassification of potentially hazardous asteroids could be detrimental in a real-world setting, as failing to identify a PHA before it is too late risks severe consequences.
+
+Overall, because KNN is a relatively simple algorithm, we did not expect our final model to perfectly capture the complex relationships when it comes to asteroid characteristics. It's possible that using more advanced models, particularly those designed to handle class imbalances, could improve our detection of hazardous asteroids. Further, given that examining feature importances is out of scope for this project (given the constraint of methods presented in DSCI 100), we are unable to explore whether some of these orbital and physical characteristics are better predictors of a PHA than others that could perhaps be used to label PHAs alongside MOID and absolute magnitude. Future work should do so in order to more appropriately answer the question of if additional orbital and physical characteristics are associated with predicting whether near-earth asteroids are potentially hazardous.
+
+## References
+
+::: {#refs}
+:::

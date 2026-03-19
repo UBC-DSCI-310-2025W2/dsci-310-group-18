@@ -25,6 +25,7 @@ docker compose up
 ```
 3. Open the URL printed in the terminal (starting with http://127.0.0.1:8888/...) in your browser.
 4. Navigate to work/notebooks/asteroid_analysis.ipynb and run all cells via Kernel → Restart Kernel and Run All Cells.
+   The Quarto report source is at `work/asteroid_analysis.qmd`. From a terminal inside the container, run `cd ~/work && quarto render asteroid_analysis.qmd`.
 5. When finished, stop the container with Ctrl+C, then:
 ```bash
 docker compose down
@@ -50,6 +51,7 @@ This project's computation environment is containerized using Docker. We use a D
     docker run --rm -p 8888:8888 -v "$(pwd):/home/jovyan/work" dsci-310-group-18 jupyter lab   
     ```
 Open the URL provided in the terminal (starting with http://127.0.0.1:8888/lab) in your browser to access the notebooks.
+To render the Quarto report in the container shell, use `cd ~/work && quarto render asteroid_analysis.qmd`.
 
 3.  **Running Locally (Without Docker)**
 If you prefer not to use Docker, you can install the environment locally using conda-lock:
