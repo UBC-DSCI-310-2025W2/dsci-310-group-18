@@ -1,2 +1,2 @@
-best_threshold=0.375
+best_threshold=0.3541666666666667
 min_precision=0.5
