@@ -1,13 +1,16 @@
 # Makefile
 
 # Usage:
-#   make all
-#   make clean
+#   make all - creates html and pdf after processing/running data, eda, model, and eval
+#   make clean - removes all generated data files, figures, tables, models, and reports
 
-.PHONY: all data eda model eval clean
+.PHONY: all data eda model eval html pdf clean
 
-all: data eda model eval
-# all: report/asteroid_report.html # when the quarto is made
+all: asteroid_analysis.html asteroid_analysis.pdf
+
+html: asteroid_analysis.html
+
+pdf: asteroid_analysis.pdf
 
 data: data/raw/asteroid_data_raw.csv \
 	data/clean/asteroid_data_clean.csv \
@@ -33,6 +36,14 @@ eval: results/figures/05_val-confusion-matrix.png \
 	results/tables/validation_metrics.txt \
 	results/tables/best_threshold.txt \
 	results/tables/test_metrics.txt
+
+# html file
+asteroid_analysis.html: asteroid_analysis.qmd references.bib data eda model eval
+	quarto render asteroid_analysis.qmd --to html
+
+# pdf file
+asteroid_analysis.pdf: asteroid_analysis.qmd references.bib data eda model eval
+	quarto render asteroid_analysis.qmd --to pdf
 
 # raw data from NASA JPL SBDB API
 data/raw/asteroid_data_raw.csv: scripts/01_fetch-data.py
@@ -117,4 +128,6 @@ clean:
 		results/tables/best_params.txt \
 		results/tables/validation_metrics.txt \
 		results/tables/best_threshold.txt \
-		results/tables/test_metrics.txt 
+		results/tables/test_metrics.txt \
+		asteroid_analysis.html \
+		asteroid_analysis.pdf
