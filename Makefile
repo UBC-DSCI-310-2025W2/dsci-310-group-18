@@ -1,7 +1,17 @@
 # Makefile
 
+# This driver script runs the full analysis from start to finish. 
+# It downloads the raw asteroid data, 
+# cleans the data, 
+# splits and preprocesses it, 
+# creates figures, trains a KNN model, 
+# evaluates the model on validation and test sets, 
+# and renders the Quarto report as an HTML and PDF file. 
+
 # Usage:
-#   make all - creates html and pdf after processing/running data, eda, model, and eval
+#   make all - creates HTML and pdf PDF processing/running data, eda, model, and evaluation
+#   make html - renders only the HTML file
+#   make pdf - renders only the PDF file
 #   make clean - removes all generated data files, figures, tables, models, and reports
 
 .PHONY: all data eda model eval html pdf clean
