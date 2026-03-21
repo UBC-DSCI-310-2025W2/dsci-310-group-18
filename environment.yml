@@ -4,6 +4,7 @@ channels:
 dependencies:
   - python=3.12
   - pip
+  - make
   - ipykernel=7.1
   - nbformat
   - nbclient
