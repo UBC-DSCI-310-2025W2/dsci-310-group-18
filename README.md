@@ -9,11 +9,36 @@ The data we used to build our model contains all near-earth asteroids and their 
 
 ## Report
 
-The analysis report can be found in `notebooks/asteroid_analysis.ipynb`. 
+The main analysis, a Quarto report, can be found in `asteroid_analysis.qmd`. To render the report as either an HTML or PDF file, use the `Makefile`. Additionally it can be viewed as a Python notebook in `notebooks/asteroid_analysis.ipynb`.
 
 ## Usage
-### Run with Docker Compose (Recommended)
-The simplest way to run the project. Requires Docker Desktop to be installed and running.
+### Run a driver script (Recommended)
+The simplest way to run the analysis pipeline involves a driver script, the `Makefile`, which lives in the root directory.
+1. Clone the repository:
+```bash
+git clone https://github.com/UBC-DSCI-310-2025W2/dsci-310-group-18.git
+cd dsci-310-group-18
+```
+2. From the root directory, run the driver script to process the full workflow and render both an HTML and PDF report:
+```
+make all
+```
+Or, to simply produce a PDF report:
+```
+make pdf
+```
+OR, to produce just an HTML report:
+```
+make html
+```
+3. Remove all generated outputs (optional)
+```
+make clean
+```
+
+
+### Run with Docker Compose 
+An alternative way to run the project requires Docker Desktop to be installed and running.
 1. Clone the repository:
 ```bash
 git clone https://github.com/UBC-DSCI-310-2025W2/dsci-310-group-18.git
@@ -31,7 +56,6 @@ docker compose down
 ```
 
 ### Running with Docker locally
-
 This project uses `conda-lock` for Docker. Install using: 
 ```bash
 conda-lock install --name YOURENV conda-lock.yml
@@ -61,6 +85,8 @@ If you prefer not to use Docker, you can install the environment locally using c
     ```
 ## Dependencies
 Python version 3.12. Jupyter and Python packages can be found in `environment.yml`. 
+The locked environment can be found in `conda-lock.yml`. 
+GNU Make and Quarto are also required to run the full analysis and render the reports.
 
 ## License
 
