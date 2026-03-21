@@ -3,16 +3,16 @@ Authors: Jerry Jin, Malcolm Maxwell, Sadie Lee
 
 ## About
 
-We attempt to build a binary classification model using the k-nearest neighbors algorithm to predict potentially hazardous near-earth asteroids from orbital and physical characteristics including eccentricity, perihelion distance, and inclination. This model could provide the detection of potential risks in order to provide timely intervention. The current model achieves a test set AUC (area under the curve) of $0.9972$. Precision could be improved particularly for near-earth asteroids labeled as potentially hazardous. 
+The main goal of this project is to build a predictive model that classifies near-earth objects as potentially hazardous, specifically aiming to see if additional orbital and physical characteristics are associated with such prediction. We use the k-nearest neighbors algorithm using 4 orbital and physical variables from NASA JPL's Small-Body DataBase (SBDB) as predictors and focusing on the target binary variable `pha` (potentially hazardous asteroid) for classification. Additionally, we tune the model using cross-validation, and evaluate its performance with ROC-AUC, PR curves, confusion matrices, and threshold tuning. Note that the SBDB contains significant class imbalance between PHA and non-PHA near-earth objects, which led us to prioritize recall and reduce false negatives.
 
-The data we used to build our model contains all near-earth asteroids and their characteristics collected from the NASA JPL Small-Body DataBase (SBDB) via the available API. Documentation of this database can be found at https://ssd-api.jpl.nasa.gov/doc/sbdb_query.html.
+The data we used to build our model contains all near-earth asteroids and their characteristics collected from the NASA JPL Small-Body DataBase via the available API. Documentation of this database can be found at https://ssd-api.jpl.nasa.gov/doc/sbdb_query.html.
 
 ## Report
 
-The main analysis, a Quarto report, can be found in `asteroid_analysis.qmd`. To render the report as either an HTML or PDF file, use the `Makefile`. Additionally it can be viewed as a Python notebook in `notebooks/asteroid_analysis.ipynb`.
+The main analysis, a Quarto report, can be found in `asteroid_analysis.qmd`. To render the report as either an HTML or PDF file, use the `Makefile` and run `make` in the terminal. Additionally it can be viewed as a Jupyter notebook in `notebooks/asteroid_analysis.ipynb`.
 
 ## Usage
-### Run a driver script (Recommended)
+### Run the driver script (Recommended)
 The simplest way to run the analysis pipeline involves a driver script, the `Makefile`, which lives in the root directory.
 1. Clone the repository:
 ```bash
@@ -38,7 +38,7 @@ make clean
 
 
 ### Run with Docker Compose 
-An alternative way to run the project requires Docker Desktop to be installed and running.
+An alternative way to run the project interactively requires Docker Desktop to be installed and running.
 1. Clone the repository:
 ```bash
 git clone https://github.com/UBC-DSCI-310-2025W2/dsci-310-group-18.git
