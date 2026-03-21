@@ -3,7 +3,10 @@ channels:
   - conda-forge
 dependencies:
   - python=3.12
+  - pip
   - ipykernel=7.1
+  - nbformat
+  - nbclient
   - pandas=3.0
   - requests=2.32.5
   - matplotlib=3.10.8

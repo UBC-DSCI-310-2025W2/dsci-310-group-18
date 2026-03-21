@@ -3,8 +3,6 @@ services:
     image: zheqijin/dsci-310-group-18:latest
     build:
       context: .
-      platforms:
-        - linux/arm64
     ports:
       - "8888:8888"
     volumes:
