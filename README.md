@@ -12,33 +12,8 @@ The data we used to build our model contains all near-earth asteroids and their 
 The main analysis, a Quarto report, can be found in `asteroid_analysis.qmd`. To render the report as either an HTML or PDF file, use the `Makefile` and run `make` in the terminal. Additionally it can be viewed as a Jupyter notebook in `notebooks/asteroid_analysis.ipynb`.
 
 ## Usage
-### Run the driver script (Recommended)
-The simplest way to run the analysis pipeline involves a driver script, the `Makefile`, which lives in the root directory.
-1. Clone the repository:
-```bash
-git clone https://github.com/UBC-DSCI-310-2025W2/dsci-310-group-18.git
-cd dsci-310-group-18
-```
-2. From the root directory, run the driver script to process the full workflow and render both an HTML and PDF report:
-```
-make all
-```
-Or, to simply produce a PDF report:
-```
-make pdf
-```
-OR, to produce just an HTML report:
-```
-make html
-```
-3. Remove all generated outputs (optional)
-```
-make clean
-```
-
-
 ### Run with Docker Compose 
-An alternative way to run the project interactively requires Docker Desktop to be installed and running.
+An recommended way to run the project interactively requires Docker Desktop to be installed and running.
 1. Clone the repository:
 ```bash
 git clone https://github.com/UBC-DSCI-310-2025W2/dsci-310-group-18.git
@@ -49,42 +24,23 @@ cd dsci-310-group-18
 docker compose up
 ```
 3. Open the URL printed in the terminal (starting with http://127.0.0.1:8888/...) in your browser.
-4. Navigate to work/notebooks/asteroid_analysis.ipynb and run all cells via Kernel → Restart Kernel and Run All Cells.
-   The Quarto report source is at `work/asteroid_analysis.qmd`. From a terminal inside the container, run `cd ~/work && quarto render asteroid_analysis.qmd`.
+4. From a terminal inside the container use the following command to generate report in pdf and html:
+```bash
+cd ~/work
+conda activate dsci310proj
+make clean (optional)
+make all
+```
+5. To view pdf or html:
+```bash
+open asteroid_analysis.html
+open asteroid_analysis.pdf
+```
 5. When finished, stop the container with Ctrl+C, then:
 ```bash
 docker compose down
 ```
 
-### Running with Docker locally
-This project uses `conda-lock` for Docker. Install using: 
-```bash
-conda-lock install --name YOURENV conda-lock.yml
-```
-
-This project's computation environment is containerized using Docker. We use a Docker container image to make the computational environment for this project reproducible. To run the analysis and develop collaboratively:
-
-1. **Build the Docker image:**
-   Navigate to the root of this repository and run:
-   ```bash
-   docker build -t dsci-310-group-18 .
-   ```
-
-2. **Run Docker**
-    ```bash
-    docker run --rm -p 8888:8888 -v "$(pwd):/home/jovyan/work" dsci-310-group-18 jupyter lab   
-    ```
-Open the URL provided in the terminal (starting with http://127.0.0.1:8888/lab) in your browser to access the notebooks.
-To render the Quarto report in the container shell, use `cd ~/work && quarto render asteroid_analysis.qmd`.
-
-3.  **Running Locally (Without Docker)**
-If you prefer not to use Docker, you can install the environment locally using conda-lock:
-
-    ```bash
-    conda-lock install --name dsci310proj conda-lock.yml
-    conda activate dsci310proj
-    jupyter lab 
-    ```
 ## Dependencies
 Python version 3.12. Jupyter and Python packages can be found in `environment.yml`. 
 The locked environment can be found in `conda-lock.yml`. 

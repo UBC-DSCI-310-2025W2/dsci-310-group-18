@@ -22,6 +22,13 @@ ENV QUARTO_PYTHON=/opt/conda/envs/dsci310proj/bin/python
 
 # 5. Install a pinned Quarto release for the target architecture
 USER root
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+    make \
+    lmodern \
+    texlive-luatex && \
+    rm -rf /var/lib/apt/lists/*
+
 RUN if [ "$TARGETARCH" = "arm64" ]; then QUARTO_ARCH="arm64"; \
     elif [ "$TARGETARCH" = "amd64" ]; then QUARTO_ARCH="amd64"; \
     else echo "Unsupported architecture: $TARGETARCH" && exit 1; \
