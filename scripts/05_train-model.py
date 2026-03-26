@@ -10,6 +10,7 @@ from sklearn.pipeline import Pipeline
 from sklearn.model_selection import RandomizedSearchCV
 from sklearn.neighbors import KNeighborsClassifier
 from scipy.stats import randint
+from src.drop_columns import drop_columns
 
 @click.command()
 @click.option('--train-data-path', type=str, required=True, help='Filepath to training data csv.')
@@ -35,7 +36,7 @@ def main(train_data_path, preprocessor_path, results_dir, model_path, seed):
         'semi_major_axis',
         'time_of_perihelion_passage'
     ]
-    asteroid_train = asteroid_train.drop(columns=drop_cols)
+    asteroid_train = drop_columns(asteroid_train, drop_cols)
 
     # Instantiate model and pipeline objects
     knn = KNeighborsClassifier()
