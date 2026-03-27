@@ -7,7 +7,11 @@ import pandas as pd
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import RobustScaler
 import joblib
+import sys
 import os
+
+sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
+from src.split_features_target import split_features_target
 
 @click.command()
 @click.option('--clean-data-path', type=str, required=True, help='Filepath to clean data.')
@@ -21,8 +25,7 @@ def main(clean_data_path, output_dir, seed):
     df = pd.read_csv(clean_data_path)
 
     # Features and target
-    X = df.select_dtypes(include='number').drop(columns=['pha', 'spkid'])
-    y = df['pha']
+    X, y = split_features_target(df)
 
     # Train (60%) / Test (20%)
     X_temp, X_test, y_temp, y_test = train_test_split(
