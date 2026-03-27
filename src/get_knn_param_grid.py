@@ -3,13 +3,26 @@ from scipy.stats import randint
 
 def get_knn_param_grid():
     """
-    Return the hyperparameter search space for the asteroid KNN model.
+    Creates the hyperparameter grid for tuning the KNN classifier.
 
-    Returns
+    Parameters:
+    ----------
+    None
+
+    Returns:
     -------
     dict
-        Dictionary of parameter distributions and option lists for
-        ``RandomizedSearchCV``.
+        A dictionary containing the KNN hyperparameter search space.
+
+    Examples:
+    --------
+    >>> param_grid = get_knn_param_grid()
+    >>> print(param_grid["knn__weights"])
+
+    Notes:
+    -----
+    This function defines the search space used by RandomizedSearchCV
+    when tuning the KNN model in the training script.
     """
     return {
         "knn__n_neighbors": randint(3, 50),
