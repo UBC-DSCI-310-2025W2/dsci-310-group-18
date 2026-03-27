@@ -4,7 +4,11 @@
 
 import click
 import pandas as pd
-import numpy as np
+import sys
+import os
+
+sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
+from src.clean import clean_pha, clean_full_name
 
 @click.command()
 @click.option('--raw-data-path', type=str, help='Filepath to raw data.')
@@ -31,11 +35,10 @@ def main(raw_data_path, clean_data_path):
     df.dropna(subset=['pha'], inplace=True)
 
     # Convert PHA to boolean
-    pha_map = {'Y': 1, 'N': 0}
-    df['pha'] = df['pha'].map(pha_map)
+    df = clean_pha(df)
 
     # Clean and standardize full name
-    df['full_name'] = df['full_name'].str.replace(r"[()]", "", regex=True).str.replace(r"\s+", "_", regex=True).str.strip("_")
+    df = clean_full_name(df)
 
     # Drop rows where absolute magnitude is NaN
     df.dropna(subset=['abs_magnitude'], inplace=True)
