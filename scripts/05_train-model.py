@@ -9,7 +9,8 @@ import joblib
 from sklearn.pipeline import Pipeline
 from sklearn.model_selection import RandomizedSearchCV
 from sklearn.neighbors import KNeighborsClassifier
-from scipy.stats import randint
+from src.drop_columns import drop_columns
+from src.get_knn_param_grid import get_knn_param_grid
 
 @click.command()
 @click.option('--train-data-path', type=str, required=True, help='Filepath to training data csv.')
@@ -35,7 +36,7 @@ def main(train_data_path, preprocessor_path, results_dir, model_path, seed):
         'semi_major_axis',
         'time_of_perihelion_passage'
     ]
-    asteroid_train = asteroid_train.drop(columns=drop_cols)
+    asteroid_train = drop_columns(asteroid_train, drop_cols)
 
     # Instantiate model and pipeline objects
     knn = KNeighborsClassifier()
@@ -45,12 +46,7 @@ def main(train_data_path, preprocessor_path, results_dir, model_path, seed):
     ])
 
     # Parameters
-    param_dict = {
-        "knn__n_neighbors": randint(3, 50),
-        "knn__weights": ["uniform", "distance"],
-        "knn__metric": ["euclidean", "manhattan", "minkowski"],
-        "knn__p": [1, 2]
-    }
+    param_dict = get_knn_param_grid()
 
     # 5-fold random search CV
     random_search = RandomizedSearchCV(
