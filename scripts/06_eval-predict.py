@@ -7,9 +7,13 @@ import pandas as pd
 import numpy as np
 import joblib
 import os
+import sys
 import matplotlib.pyplot as plt
 import seaborn as sns
 from sklearn.metrics import classification_report, roc_auc_score, confusion_matrix, ConfusionMatrixDisplay, precision_recall_curve, average_precision_score
+
+sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
+from src.prepare_eval_data import prepare_eval_data
 
 @click.command()
 @click.option('--val-data-path', type=str, required=True, help='Filepath to validation data.')
@@ -32,11 +36,8 @@ def main(val_data_path, test_data_path, model_path, plot_dir, table_dir):
     val = pd.read_csv(val_data_path)
     test = pd.read_csv(test_data_path)
 
-    X_val = val.drop(columns=['pha', 'abs_magnitude', 'epoch', 'min_orbit_intersection_dist', 'semi_major_axis', 'time_of_perihelion_passage'])
-    y_val = val['pha']
-
-    X_test = test.drop(columns=['pha', 'abs_magnitude', 'epoch', 'min_orbit_intersection_dist', 'semi_major_axis', 'time_of_perihelion_passage'])
-    y_test = test['pha']
+    X_val, y_val = prepare_eval_data(val)
+    X_test, y_test = prepare_eval_data(test)
 
     # Validation evaluation
     y_val_pred = model.predict(X_val)
