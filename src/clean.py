@@ -32,17 +32,24 @@ def clean_pha(df: pd.DataFrame) -> pd.DataFrame:
     # Create copy of dataframe
     df = df.copy()
 
-    df['pha'] = (
+    # Handle NaNs first
+    if df['pha'].isna().any():
+        raise ValueError("The column contains NaN values.")
+
+    cleaned = df['pha'] = (
         df['pha']
         .astype(str) # handle non-strings safely
         .str.strip() # remove any whitespace
         .str.upper() # normalize case
-        .map(pha_map) # apply mapping
     )
 
+    mapped = cleaned.map(pha_map)
+
     # Raise error for unexpected NaN values.
-    if df['pha'].isna().any():
-        raise ValueError("Unexpected NaN values found in 'pha' column.")
+    if mapped.isna().any():
+        raise ValueError("PHA column contains invalid values.")
+    
+    df['pha'] = mapped
 
     return df
 
@@ -73,6 +80,14 @@ def clean_full_name(df: pd.DataFrame) -> pd.DataFrame:
     """
     # Create copy of dataframe
     df = df.copy()
+
+    # Check for NaN
+    if df['full_name'].isna().any():
+        raise ValueError("The column contains NaN values.")
+    
+    # Check for non-strings
+    if not df['full_name'].map(lambda x: isinstance(x, str)).all():
+        raise ValueError("The column contains invalid values.")
     
     df['full_name'] = (
         df['full_name']
