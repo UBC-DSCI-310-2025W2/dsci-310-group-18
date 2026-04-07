@@ -1,4 +1,4 @@
-# 05_train-model.py
+# 06_train-model.py
 # author: Sadie Lee
 # date: 2026-03-16
 
@@ -9,6 +9,11 @@ import joblib
 from sklearn.pipeline import Pipeline
 from sklearn.model_selection import RandomizedSearchCV
 from sklearn.neighbors import KNeighborsClassifier
+
+import sys
+from pathlib import Path
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+
 from src.drop_columns import drop_columns
 from src.get_knn_param_grid import get_knn_param_grid
 
