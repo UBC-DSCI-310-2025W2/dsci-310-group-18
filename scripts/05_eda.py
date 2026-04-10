@@ -1,6 +1,14 @@
-# 05_eda.py
-# author: Sadie Lee
-# date: 2026-03-16
+"""Create and save exploratory data analysis figures for the training set.
+
+This command-line script generates the plots referenced in the Quarto report,
+including histograms, a correlation heatmap, ECDFs, and KDE plots.
+
+Example
+-------
+python scripts/05_eda.py \
+    --train-data-path=data/processed/asteroid_train.csv \
+    --save-plot-dir=results/figures
+"""
 
 import click
 import pandas as pd

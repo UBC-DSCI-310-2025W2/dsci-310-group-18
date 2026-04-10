@@ -3,9 +3,8 @@ import pytest
 
 from src.prepare_eval_data import prepare_eval_data
 
-## Expected use cases
-# test basic evaluation data split
 def test_prepare_eval_data_basic():
+    """The helper should split evaluation predictors and target labels."""
     df = pd.DataFrame(
         {
             "pha": [0, 1],
@@ -26,8 +25,8 @@ def test_prepare_eval_data_basic():
     assert y.tolist() == [0, 1]
 
 
-# test dropped columns are not included in X
 def test_prepare_eval_data_drops_expected_columns():
+    """The helper should drop the same columns excluded during modeling."""
     df = pd.DataFrame(
         {
             "pha": [0, 1],
@@ -51,9 +50,8 @@ def test_prepare_eval_data_drops_expected_columns():
     assert y.name == "pha"
 
 
-## Edge cases
-# test X is empty if only dropped columns are present
 def test_prepare_eval_data_empty_X():
+    """The helper should allow an empty evaluation feature matrix."""
     df = pd.DataFrame(
         {
             "pha": [0, 1],
@@ -72,15 +70,14 @@ def test_prepare_eval_data_empty_X():
     assert y.tolist() == [0, 1]
 
 
-## Error cases
-# test error is raised for non-dataframe input
 def test_prepare_eval_data_non_dataframe():
+    """The helper should reject non-DataFrame inputs."""
     with pytest.raises(TypeError, match="df must be a pandas DataFrame"):
         prepare_eval_data(["not", "a", "dataframe"])
 
 
-# test error is raised when pha column is missing
 def test_prepare_eval_data_missing_pha():
+    """The helper should require the target column."""
     df = pd.DataFrame(
         {
             "abs_magnitude": [21.1, 22.3],
@@ -96,8 +93,8 @@ def test_prepare_eval_data_missing_pha():
         prepare_eval_data(df)
 
 
-# test error is raised when a dropped column is missing
 def test_prepare_eval_data_missing_drop_column():
+    """The helper should require every expected evaluation column."""
     df = pd.DataFrame(
         {
             "pha": [0, 1],

@@ -1,6 +1,14 @@
-# 04_split-data.py
-# author: Sadie Lee
-# date: 2026-03-16
+"""Split the validated dataset and fit the preprocessing transformer.
+
+This command-line script performs the train/validation/test split used by the
+project, applies robust scaling, and saves the processed datasets and scaler.
+
+Example
+-------
+python scripts/04_split-data.py \
+    --clean-data-path=data/validated/asteroid_data_validated.csv \
+    --output-dir=data/processed
+"""
 
 import click
 import pandas as pd

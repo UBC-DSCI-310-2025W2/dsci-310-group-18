@@ -11,7 +11,7 @@ COPY conda-lock.yml /tmp/conda-lock.yml
 RUN conda install -y conda-lock && \
     conda-lock install --name dsci310proj /tmp/conda-lock.yml && \
     conda install -y -n dsci310proj pip nbformat nbclient && \
-    /opt/conda/envs/dsci310proj/bin/python -c "import pip, nbformat, nbclient" && \
+    /opt/conda/envs/dsci310proj/bin/python -c "import pip, nbformat, nbclient, pandera" && \
     conda clean -afy
 
 # 4. Register the new environment to overwrite the default kernel

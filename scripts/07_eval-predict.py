@@ -1,6 +1,18 @@
-# 07_eval-predict.py
-# author: Sadie Lee
-# date: 2026-03-16
+"""Evaluate the trained model and save report-ready figures and tables.
+
+This command-line script scores the tuned KNN model on the validation and test
+sets, selects a decision threshold, and saves evaluation outputs used in the
+final report.
+
+Example
+-------
+python scripts/07_eval-predict.py \
+    --val-data-path=data/processed/asteroid_val.csv \
+    --test-data-path=data/processed/asteroid_test.csv \
+    --model-path=results/models/best_knn_model.pkl \
+    --plot-dir=results/figures \
+    --table-dir=results/tables
+"""
 
 import click
 import pandas as pd

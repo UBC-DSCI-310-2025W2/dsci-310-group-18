@@ -17,9 +17,10 @@ def clean_pha(df: pd.DataFrame) -> pd.DataFrame:
     Examples:
     --------
     >>> import pandas as pd
-    >>> df = pd.read_csv('../data/raw/asteroid_data_raw.csv')
+    >>> df = pd.DataFrame({"pha": ["Y", " n ", "y"]})
     >>> result = clean_pha(df)
-    >>> print(result)
+    >>> result["pha"].tolist()
+    [1, 0, 1]
 
     Notes:
     -----
@@ -69,9 +70,10 @@ def clean_full_name(df: pd.DataFrame) -> pd.DataFrame:
     Examples:
     --------
     >>> import pandas as pd
-    >>> df = pd.read_csv('../data/raw/asteroid_data_raw.csv')
+    >>> df = pd.DataFrame({"full_name": ["Asteroid (1234)"]})
     >>> result = clean_full_name(df)
-    >>> print(result)
+    >>> result["full_name"].iloc[0]
+    'Asteroid_1234'
 
     Notes:
     -----

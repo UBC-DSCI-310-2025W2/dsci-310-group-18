@@ -1,6 +1,24 @@
-2026-04-07 12:18:15,955 - File format check passed.
-2026-04-07 12:18:16,016 - Schema validation passed.
-2026-04-07 12:18:16,016 - Outlier check passed.
-2026-04-07 12:18:16,019 - Missingness check passed.
-2026-04-07 12:18:16,032 - Duplicates check passed.
-2026-04-07 12:18:16,032 - All validation checks passed.
+2026-04-09 13:47:56,190 - File format check passed.
+2026-04-09 13:47:56,224 - Schema validation passed.
+2026-04-09 13:47:56,224 - Outlier check passed.
+2026-04-09 13:47:56,225 - Missingness check passed.
+2026-04-09 13:47:56,226 - Duplicates check passed.
+2026-04-09 13:47:56,227 - All validation checks passed.
+2026-04-09 13:47:56,229 - File format check passed.
+2026-04-09 13:47:56,317 - Validation failed with 8 errors
+2026-04-09 13:47:56,318 -     schema_context column                  check check_number failure_case index
+0  DataFrameSchema   None       column_in_schema         None     fullname  None
+2  DataFrameSchema   None    column_in_dataframe         None    full_name  None
+1           Column    pha  coerce_dtype('int64')         None          yes     0
+3           Column   pdes           not_nullable         None          NaN     0
+4           Column    pha         dtype('int64')         None          str  None
+2026-04-09 13:47:56,322 - File format check passed.
+2026-04-09 13:47:56,358 - Validation failed with 3 errors
+2026-04-09 13:47:56,360 -     schema_context column             check check_number  failure_case index
+2  DataFrameSchema   None    Duplicate rows            0             0  None
+0           Column  spkid  field_uniqueness         None      20000433     0
+1           Column  spkid  field_uniqueness         None      20000433     1
+2026-04-09 13:47:56,363 - File format check passed.
+2026-04-09 13:47:56,389 - Validation failed with 1 errors
+2026-04-09 13:47:56,390 -   schema_context                       column                      check  check_number  failure_case  index
+0         Column  min_orbit_intersection_dist  in_range(0.000177, 276.0)             0        1000.0      0
