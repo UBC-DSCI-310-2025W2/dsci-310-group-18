@@ -1,0 +1,1 @@
+{'knn__metric': 'minkowski', 'knn__n_neighbors': 48, 'knn__p': 1, 'knn__weights': 'uniform'}

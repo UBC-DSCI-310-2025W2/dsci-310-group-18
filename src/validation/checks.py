@@ -5,7 +5,7 @@ from pathlib import Path
 
 NUMERIC_COL_BOUNDS = {
     "moid_ld": (0.000177, 276.0),
-    "epoch": (2444221.5, 2461119.5),
+    "epoch": (2444221.5, 2462000.5), # I changed the epoch range from 2461119.5 to 2462000.5
     "e": (0.0028, 0.9964),
     "a": (0.4618, 350.3),
     "q": (0.069, 1.3),

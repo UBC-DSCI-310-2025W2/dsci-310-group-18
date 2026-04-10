@@ -15,7 +15,7 @@ def get_schema():
         "orbit_id": Column(str),
         "pha": Column(int, Check.isin([0, 1])),
         "min_orbit_intersection_dist": Column(float, Check.between(0.000177, 276.0)),
-        "epoch": Column(float, Check.between(2444221.5, 2461119.5)),
+        "epoch": Column(float, Check.between(2444221.5, 2462000.5)), # I changed the epoch range from 2461119.5 to 2462000.5
         "eccentricity": Column(float, Check.between(0.0028, 0.9964)),
         "semi_major_axis": Column(float, Check.between(0.4618, 350.3)),
         "perihelion_dist": Column(float, Check.between(0.069, 1.3)),

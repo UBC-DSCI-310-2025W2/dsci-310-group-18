@@ -1,0 +1,24 @@
+2026-04-10 07:00:48,424 - File format check passed.
+2026-04-10 07:00:48,444 - Schema validation passed.
+2026-04-10 07:00:48,444 - Outlier check passed.
+2026-04-10 07:00:48,445 - Missingness check passed.
+2026-04-10 07:00:48,446 - Duplicates check passed.
+2026-04-10 07:00:48,446 - All validation checks passed.
+2026-04-10 07:00:48,450 - File format check passed.
+2026-04-10 07:00:48,476 - Validation failed with 8 errors
+2026-04-10 07:00:48,477 -     schema_context column                  check check_number failure_case index
+6  DataFrameSchema   None       column_in_schema         None     fullname  None
+7  DataFrameSchema   None    column_in_dataframe         None    full_name  None
+0           Column    pha  coerce_dtype('int64')         None          yes     0
+1           Column   pdes           not_nullable         None          NaN     0
+2           Column    pha         dtype('int64')         None          yes     0
+2026-04-10 07:00:48,480 - File format check passed.
+2026-04-10 07:00:48,495 - Validation failed with 3 errors
+2026-04-10 07:00:48,496 -     schema_context column             check check_number  failure_case index
+2  DataFrameSchema   None    Duplicate rows            0             0  None
+0           Column  spkid  field_uniqueness         None      20000433     0
+1           Column  spkid  field_uniqueness         None      20000433     1
+2026-04-10 07:00:48,501 - File format check passed.
+2026-04-10 07:00:48,512 - Validation failed with 1 errors
+2026-04-10 07:00:48,513 -   schema_context                       column                      check  check_number  failure_case  index
+0         Column  min_orbit_intersection_dist  in_range(0.000177, 276.0)             0        1000.0      0
