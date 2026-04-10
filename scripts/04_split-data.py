@@ -15,11 +15,8 @@ import pandas as pd
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import RobustScaler
 import joblib
-import sys
 import os
-
-sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
-from src.split_features_target import split_features_target
+from asteroidprep import split_features_target
 
 @click.command()
 @click.option('--clean-data-path', type=str, required=True, help='Filepath to clean data.')

@@ -32,13 +32,7 @@ make clean (optional)
 make all
 ```
 5. The rendered files `asteroid_analysis.html` and `asteroid_analysis.pdf` will be written to the repository root mounted at `~/work`. Open them from your host machine's file browser, or navigate to them in the Jupyter file browser launched by Docker.
-6. Run the automated test suite from inside the container with:
-```bash
-cd ~/work
-conda activate dsci310proj
-pytest -q
-```
-7. When finished, stop the container with Ctrl+C, then:
+6. When finished, stop the container with Ctrl+C, then:
 ```bash
 docker compose down
 ```
@@ -63,22 +57,6 @@ System tools required to reproduce the full analysis are:
 - GNU Make
 - Quarto
 - Docker Desktop and Docker Compose for the containerized workflow
-
-## Tests
-Automated tests are located in `tests/`. After activating the project
-environment, run:
-
-```bash
-conda activate dsci310proj
-pytest -q
-```
-
-If you prefer to run specific test files manually, examples include:
-
-```bash
-pytest tests/test_clean.py -q
-pytest tests/test_validation.py -q
-```
 
 ## License
 

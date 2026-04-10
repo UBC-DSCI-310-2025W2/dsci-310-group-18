@@ -19,14 +19,11 @@ import pandas as pd
 import numpy as np
 import joblib
 import os
-import sys
 import matplotlib.pyplot as plt
 import seaborn as sns
 from sklearn.metrics import classification_report, roc_auc_score, confusion_matrix, ConfusionMatrixDisplay, precision_recall_curve, average_precision_score
-
-sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
-from src.prepare_eval_data import prepare_eval_data
-from src.threshold_utils import select_threshold
+from asteroidprep import prepare_eval_data
+from asteroidprep.threshold_utils import select_threshold
 
 @click.command()
 @click.option('--val-data-path', type=str, required=True, help='Filepath to validation data.')

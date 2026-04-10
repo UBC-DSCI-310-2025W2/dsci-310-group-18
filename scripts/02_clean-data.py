@@ -12,11 +12,7 @@ python scripts/02_clean-data.py \
 
 import click
 import pandas as pd
-import sys
-import os
-
-sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
-from src.clean import clean_pha, clean_full_name
+from asteroidprep import clean_pha, clean_full_name
 
 @click.command()
 @click.option('--raw-data-path', type=str, help='Filepath to raw data.')
