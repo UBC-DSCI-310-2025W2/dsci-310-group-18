@@ -15,12 +15,8 @@ import pandas as pd
 import seaborn as sns
 import matplotlib.pyplot as plt
 import math
-import os
-import sys
 from pathlib import Path
-
-sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
-from src.infer_plot_scales import infer_plot_scales
+from asteroidprep.infer_plot_scales import infer_plot_scales
 
 def make_histogram(df, fields, save_plot_path, scales=None, cols=3):
     """

@@ -11,11 +11,7 @@ python scripts/03_validate-data.py \
 """
 
 import click
-import sys
-from pathlib import Path
-sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-
-from src.validation import run_validation
+from asteroidprep.validation import run_validation
 
 @click.command()
 @click.option("--clean-data-path", type=str, help="Path to clean data file", required=True)
