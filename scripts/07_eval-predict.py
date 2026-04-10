@@ -1,6 +1,18 @@
-# 07_eval-predict.py
-# author: Sadie Lee
-# date: 2026-03-16
+"""Evaluate the trained model and save report-ready figures and tables.
+
+This command-line script scores the tuned KNN model on the validation and test
+sets, selects a decision threshold, and saves evaluation outputs used in the
+final report.
+
+Example
+-------
+python scripts/07_eval-predict.py \
+    --val-data-path=data/processed/asteroid_val.csv \
+    --test-data-path=data/processed/asteroid_test.csv \
+    --model-path=results/models/best_knn_model.pkl \
+    --plot-dir=results/figures \
+    --table-dir=results/tables
+"""
 
 import click
 import pandas as pd
@@ -14,6 +26,7 @@ from sklearn.metrics import classification_report, roc_auc_score, confusion_matr
 
 sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
 from src.prepare_eval_data import prepare_eval_data
+from src.threshold_utils import select_threshold
 
 @click.command()
 @click.option('--val-data-path', type=str, required=True, help='Filepath to validation data.')
@@ -68,11 +81,17 @@ def main(val_data_path, test_data_path, model_path, plot_dir, table_dir):
     plt.savefig(f"{plot_dir}/06_val-pr-curve.png")
     plt.close()
 
-    # Threshold selection
+    # Threshold selection using helper that enforces a minimum precision
+    # constraint and falls back to a robust alternative when necessary.
     min_precision = 0.5
-    valid = precision[:-1] >= min_precision
-    best_idx = np.argmax(recall[:-1][valid])
-    best_thresh = thresholds[valid][best_idx]
+    threshold_result = select_threshold(
+        y_true=y_val,
+        y_proba=y_val_proba,
+        objective="max_recall",
+        min_precision=min_precision,
+        fallback="max_f1",
+    )
+    best_thresh = threshold_result.threshold
     
     with open(f"{table_dir}/best_threshold.txt", "w") as f:
         f.write(f"best_threshold={best_thresh}\n")

@@ -3,6 +3,7 @@ import pytest
 from src.validation import run_validation
 
 def test_valid_data(tmp_path):
+    """Validation should pass for a schema-compliant one-row dataset."""
     df = pd.DataFrame({
         "spkid": [20000433],
         "full_name": ["433_Eros_A898_PA"],
@@ -29,6 +30,7 @@ def test_valid_data(tmp_path):
     assert len(result) == 1 # No rows should be dropped
 
 def test_invalid_data_schema(tmp_path):
+    """Validation should fail when types, names, or values are invalid."""
     df = pd.DataFrame({
         "spkid": ["20000433"], # invalid data type
         "fullname": ["433_Eros_A898_PA"], # invalid column name
@@ -53,6 +55,7 @@ def test_invalid_data_schema(tmp_path):
         run_validation(file)
 
 def test_duplicate_rows(tmp_path):
+    """Validation should reject duplicated observations."""
     df = pd.DataFrame({
         "spkid": [20000433, 20000433],
         "full_name": ["433_Eros_A898_PA", "433_Eros_A898_PA"],
@@ -77,6 +80,7 @@ def test_duplicate_rows(tmp_path):
         run_validation(file)
 
 def test_outliers(tmp_path):
+    """Validation should reject rows that violate numeric bounds."""
     df = pd.DataFrame({
         "spkid": [20000433],
         "full_name": ["433_Eros_A898_PA"],
@@ -101,6 +105,7 @@ def test_outliers(tmp_path):
         run_validation(file)
 
 def test_invalid_file_format(tmp_path):
+    """Validation should reject unsupported input file formats."""
     file = tmp_path / "data.txt"
     file.write_text("invalid content")
 

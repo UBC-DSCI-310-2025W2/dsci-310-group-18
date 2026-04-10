@@ -1,13 +1,26 @@
-# 05_eda.py
-# author: Sadie Lee
-# date: 2026-03-16
+"""Create and save exploratory data analysis figures for the training set.
+
+This command-line script generates the plots referenced in the Quarto report,
+including histograms, a correlation heatmap, ECDFs, and KDE plots.
+
+Example
+-------
+python scripts/05_eda.py \
+    --train-data-path=data/processed/asteroid_train.csv \
+    --save-plot-dir=results/figures
+"""
 
 import click
 import pandas as pd
 import seaborn as sns
 import matplotlib.pyplot as plt
 import math
+import os
+import sys
 from pathlib import Path
+
+sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
+from src.infer_plot_scales import infer_plot_scales
 
 def make_histogram(df, fields, save_plot_path, scales=None, cols=3):
     """
@@ -68,13 +81,16 @@ def main(train_data_path, save_plot_dir):
         'abs_magnitude'
     ]
 
-    scales = {
-        'min_orbit_intersection_dist': 'log',
-        'epoch': 'log',
-        'semi_major_axis': 'log',
-        'inclination': 'log',
-        'time_of_perihelion_passage': 'log'
-    }
+    # Infer reasonable scales based on empirical skewness of each variable.
+    # This reduces manual tuning when the distribution of the training data
+    # changes (e.g., after different cleaning filters).
+    scales = infer_plot_scales(
+        scaled_asteroid_train,
+        fields,
+        log_if_skewed=True,
+        skew_threshold=1.0,
+        positive_only=True,
+    )
 
     make_histogram(
         scaled_asteroid_train, 

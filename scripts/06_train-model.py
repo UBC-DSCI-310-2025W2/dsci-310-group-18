@@ -1,6 +1,17 @@
-# 06_train-model.py
-# author: Sadie Lee
-# date: 2026-03-16
+"""Tune and train the KNN classifier used in the asteroid analysis.
+
+This command-line script loads the processed training data, runs randomized
+cross-validation over the KNN search space, and saves the fitted model and
+training artifacts.
+
+Example
+-------
+python scripts/06_train-model.py \
+    --train-data-path=data/processed/asteroid_train.csv \
+    --preprocessor-path=data/processed/robust_scaler.pkl \
+    --results-dir=results \
+    --model-path=results/models/best_knn_model.pkl
+"""
 
 import click
 import pandas as pd

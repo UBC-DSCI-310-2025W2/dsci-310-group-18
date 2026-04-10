@@ -3,9 +3,8 @@ import pytest
 
 from src.split_features_target import split_features_target
 
-## Expected use cases
-# test basic feature and target split
 def test_split_features_target_basic():
+    """The helper should split target values from numeric predictors."""
     df = pd.DataFrame(
         {
             "spkid": [101, 102, 103],
@@ -22,8 +21,8 @@ def test_split_features_target_basic():
     assert X.shape == (3, 2)
     assert y.tolist() == [1, 0, 1]
 
-# test pha and spkid are removed from X
 def test_split_features_target_drops_pha_and_spkid():
+    """The helper should exclude identifier and target columns from X."""
     df = pd.DataFrame(
         {
             "spkid": [1, 2],
@@ -38,8 +37,8 @@ def test_split_features_target_drops_pha_and_spkid():
     assert "spkid" not in X.columns
     assert y.name == "pha"
 
-# test only numeric predictor columns are kept
 def test_split_features_target_numeric_only():
+    """The helper should retain only numeric predictor columns."""
     df = pd.DataFrame(
         {
             "spkid": [1, 2],
@@ -53,9 +52,8 @@ def test_split_features_target_numeric_only():
 
     assert list(X.columns) == ["moid"]
 
-## Edge cases
-# test X is empty when no numeric predictors remain
 def test_split_features_target_empty_X():
+    """The helper should allow an empty feature matrix when needed."""
     df = pd.DataFrame(
         {
             "spkid": [1, 2],
@@ -70,14 +68,13 @@ def test_split_features_target_empty_X():
     assert list(X.columns) == []
     assert y.tolist() == [0, 1]
 
-## Error cases
-# test error is raised for non-dataframe input
 def test_split_features_target_non_dataframe():
+    """The helper should reject inputs that are not DataFrames."""
     with pytest.raises(TypeError, match="df must be a pandas DataFrame"):
         split_features_target(["not", "a", "dataframe"])
 
-# test error is raised when pha column is missing
 def test_split_features_target_missing_pha():
+    """The helper should require the target column."""
     df = pd.DataFrame(
         {
             "spkid": [1, 2],
@@ -88,8 +85,8 @@ def test_split_features_target_missing_pha():
     with pytest.raises(KeyError, match="Missing required columns"):
         split_features_target(df)
 
-# test error is raised when spkid column is missing
 def test_split_features_target_missing_spkid():
+    """The helper should require the asteroid identifier column."""
     df = pd.DataFrame(
         {
             "pha": [0, 1],

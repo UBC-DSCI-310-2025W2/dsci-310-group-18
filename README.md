@@ -13,7 +13,7 @@ The main analysis, a Quarto report, can be found in `asteroid_analysis.qmd`. To 
 
 ## Usage
 ### Run with Docker Compose 
-An recommended way to run the project interactively requires Docker Desktop to be installed and running.
+A recommended way to run the project interactively requires Docker Desktop to be installed and running.
 1. Clone the repository:
 ```bash
 git clone https://github.com/UBC-DSCI-310-2025W2/dsci-310-group-18.git
@@ -31,20 +31,54 @@ conda activate dsci310proj
 make clean (optional)
 make all
 ```
-5. To view pdf or html:
+5. The rendered files `asteroid_analysis.html` and `asteroid_analysis.pdf` will be written to the repository root mounted at `~/work`. Open them from your host machine's file browser, or navigate to them in the Jupyter file browser launched by Docker.
+6. Run the automated test suite from inside the container with:
 ```bash
-open asteroid_analysis.html
-open asteroid_analysis.pdf
+cd ~/work
+conda activate dsci310proj
+pytest -q
 ```
-5. When finished, stop the container with Ctrl+C, then:
+7. When finished, stop the container with Ctrl+C, then:
 ```bash
 docker compose down
 ```
 
 ## Dependencies
-Python version 3.12. Jupyter and Python packages can be found in `environment.yml`. 
-The locked environment can be found in `conda-lock.yml`. 
-GNU Make and Quarto are also required to run the full analysis and render the reports.
+The project uses Python 3.12 and the Conda environment named `dsci310proj`.
+Core dependencies are declared in `environment.yml` and locked in `conda-lock.yml`, including:
+
+- `python=3.12`
+- `pandas=3.0`
+- `numpy=2.4.2`
+- `matplotlib=3.10.8`
+- `seaborn=0.13.2`
+- `scikit-learn=1.8.0`
+- `requests=2.32.5`
+- `pandera=0.30.1`
+- `pytest=9.0.2`
+- `jupyterlab`
+
+System tools required to reproduce the full analysis are:
+
+- GNU Make
+- Quarto
+- Docker Desktop and Docker Compose for the containerized workflow
+
+## Tests
+Automated tests are located in `tests/`. After activating the project
+environment, run:
+
+```bash
+conda activate dsci310proj
+pytest -q
+```
+
+If you prefer to run specific test files manually, examples include:
+
+```bash
+pytest tests/test_clean.py -q
+pytest tests/test_validation.py -q
+```
 
 ## License
 

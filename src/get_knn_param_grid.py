@@ -3,7 +3,7 @@ from scipy.stats import randint
 
 def get_knn_param_grid():
     """
-    Creates the hyperparameter grid for tuning the KNN classifier.
+    Return the project's KNN hyperparameter search space.
 
     Parameters:
     ----------
@@ -21,8 +21,9 @@ def get_knn_param_grid():
 
     Notes:
     -----
-    This function defines the search space used by RandomizedSearchCV
-    when tuning the KNN model in the training script.
+    This helper returns a static search space on purpose: it keeps the tuning
+    configuration in one place so the training script and tests share the same
+    expected parameter grid.
     """
     return {
         "knn__n_neighbors": randint(3, 50),

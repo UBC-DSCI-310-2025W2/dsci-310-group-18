@@ -1,6 +1,14 @@
-# 02_validate-data.py
-# Author: Sadie Lee
-# date: 2026-04-07
+"""Validate the cleaned asteroid dataset against schema and quality checks.
+
+This command-line script runs the validation subpackage, logs validation
+results, and writes the validated dataset to disk if checks pass.
+
+Example
+-------
+python scripts/03_validate-data.py \
+    --clean-data-path=data/clean/asteroid_data_clean.csv \
+    --validated-data-path=data/validated/asteroid_data_validated.csv
+"""
 
 import click
 import sys
@@ -14,6 +22,7 @@ from src.validation import run_validation
 @click.option("--validated-data-path", type=str, help="Path to validated data file", required=True)
 
 def main(clean_data_path, validated_data_path):
+    """Run validation and persist the validated dataset."""
     try:
         validated = run_validation(clean_data_path, log_file="results/logs/validation.log")
         print(f"Rows after val: {validated.shape[0]}")

@@ -144,6 +144,8 @@ clean:
 		results/figures/08_recall-at-k.png \
 		results/figures/09_prob-dist.png \
 		results/models/best_knn_model.pkl \
+		results/models/asteroid_knn.pkl \
+		results/models/robust_scaler.pkl \
 		results/tables/model_results.csv \
 		results/tables/best_params.txt \
 		results/tables/validation_metrics.txt \

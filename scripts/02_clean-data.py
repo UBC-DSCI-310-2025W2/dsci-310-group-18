@@ -1,6 +1,14 @@
-# 02_clean-data.py
-# author: Sadie Lee
-# date: 2026-03-16
+"""Clean the raw asteroid dataset and write the cleaned output to disk.
+
+This command-line script renames columns, standardizes the target and
+asteroid names, removes invalid rows, and saves the cleaned dataset.
+
+Example
+-------
+python scripts/02_clean-data.py \
+    --raw-data-path=data/raw/asteroid_data_raw.csv \
+    --clean-data-path=data/clean/asteroid_data_clean.csv
+"""
 
 import click
 import pandas as pd

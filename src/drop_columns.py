@@ -3,7 +3,7 @@ import pandas as pd
 
 def drop_columns(data_frame, columns):
     """
-    Drops selected columns from a pandas DataFrame.
+    Drop selected columns from a pandas DataFrame with input validation.
 
     Parameters:
     ----------
@@ -26,9 +26,9 @@ def drop_columns(data_frame, columns):
 
     Notes:
     ------
-    This function uses the pandas library to remove a specified set of
-    columns from the input DataFrame. It raises a TypeError if the
-    input is not a pandas DataFrame or if columns is not provided as a list.
+    This helper is intentionally thin around `pandas.DataFrame.drop`, but it
+    centralizes basic input validation and gives the training pipeline a single
+    project-level function to test and reuse.
     """
     if not isinstance(data_frame, pd.DataFrame):
         raise TypeError("data_frame must be a pandas DataFrame")

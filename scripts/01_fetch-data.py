@@ -1,6 +1,14 @@
-# 01_fetch-data.py
-# author: Sadie Lee
-# date: 2026-03-16
+"""Fetch near-Earth asteroid records from the NASA JPL SBDB API.
+
+This command-line script downloads the raw dataset used throughout the
+analysis pipeline and writes it to a CSV file.
+
+Example
+-------
+python scripts/01_fetch-data.py \
+    --read-url="https://ssd-api.jpl.nasa.gov/sbdb_query.api" \
+    --write-path=data/raw/asteroid_data_raw.csv
+"""
 
 import click
 import requests
